@@ -69,5 +69,10 @@ class DomainService:
             kind = self.rules.normalize_kind(kind)
         return self.repository.list_entities(kind=kind, status=status)
 
+    def situation(self, today=None):
+        cases = self.repository.list_entities(kind="case")
+        contacts = self.repository.list_entities(kind="contact")
+        return self.rules.assess_situation(cases, contacts, today=today)
+
     def audit_log(self, entity_id=None):
         return self.repository.list_audit(entity_id=entity_id)
