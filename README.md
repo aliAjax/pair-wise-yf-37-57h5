@@ -34,6 +34,12 @@ python3 app.py --db ./data.db --port 8303
 - `GET /api/entities/<id>`：读取对象当前版本。
 - `POST /api/entities/<id>/actions`：提交`{"action":"动作名","data":{...},"expected_version":数字}`。
 - `GET /api/audit`：读取审计记录。
+- `GET /api/situation`：调查态势只读视图（实时派生，不改变任何记录状态）。
+  - `clusters`：同地点且发病日期间隔不超过14天（可链式传递）的病例聚集组；`risk_count` 为该组风险人数。
+  - `excluded_cases`：经 `rule_out` 动作排除的病例，保留接触关系、不计入风险人数，但仍可作为风险路径的中间节点。
+  - `risk_paths`：沿病例-接触者关系连接两个聚集组的最短路径。
+  - `overdue_followups` / `overdue_count`：随访到期日（`due_at`）已到仍未完成的接触者待办；可用 `?as_of=YYYY-MM-DD` 指定参照日期。
+- `POST /api/entities/<id>/actions` 病例动作 `rule_out`（数据需含 `reason`）：把病例标记为已排除。
 
 请求身份通过`X-User-Id`和`X-Role`请求头传入。创建和动作的可执行角色由规则引擎控制。
 

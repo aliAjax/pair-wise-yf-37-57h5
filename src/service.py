@@ -1,8 +1,8 @@
 from uuid import uuid4
 
 from .audit import AuditTrail
-from .domain import ConflictError, NotFoundError
-from .rules import RuleEngine
+from .domain import ConflictError, NotFoundError, ValidationError
+from .rules import RuleEngine, build_situation
 
 
 class DomainService:
@@ -71,3 +71,16 @@ class DomainService:
 
     def audit_log(self, entity_id=None):
         return self.repository.list_audit(entity_id=entity_id)
+
+    def situation(self, as_of=None):
+        """Derived read model: clusters, cross-group risk paths, overdue todos.
+
+        Computed live from current records, so creates/updates show up at once
+        without touching entity statuses or the existing query surface.
+        """
+        cases = self.repository.list_entities(kind="case")
+        contacts = self.repository.list_entities(kind="contact")
+        try:
+            return build_situation(cases, contacts, as_of=as_of)
+        except (TypeError, ValueError) as exc:
+            raise ValidationError(str(exc))
